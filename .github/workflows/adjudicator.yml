@@ -1,0 +1,26 @@
+name: CT Adjudicator Baseline
+
+on:
+  workflow_run:
+    workflows: ["CT Executor Baseline"]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  adjudicate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record trusted control-plane identity
+        run: |
+          echo "marker=ADJUDICATOR_BASE_V1"
+          echo "event=${{ github.event_name }}"
+          echo "upstream_conclusion=${{ github.event.workflow_run.conclusion }}"
+          echo "upstream_head_sha=${{ github.event.workflow_run.head_sha }}"
+          echo "workflow_sha=${{ github.workflow_sha }}"
+      - name: Assert no repository checkout
+        run: |
+          test ! -d .git
+          echo "PASS: adjudicator did not checkout repository code"
