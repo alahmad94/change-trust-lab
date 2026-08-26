@@ -1,0 +1,32 @@
+name: CT Executor Baseline
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record workflow identity
+        run: |
+          echo "marker=BASE_WORKFLOW_V1"
+          echo "event=${{ github.event_name }}"
+          echo "head_repo=${{ github.event.pull_request.head.repo.full_name }}"
+          echo "base_repo=${{ github.event.pull_request.base.repo.full_name }}"
+          echo "head_sha=${{ github.event.pull_request.head.sha }}"
+          echo "workflow_sha=${{ github.workflow_sha }}"
+          echo "token_permissions_are_declared_contents_read=true"
+      - name: Checkout untrusted PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Read PR-controlled marker
+        run: |
+          if [ -f lab/pr-marker.txt ]; then cat lab/pr-marker.txt; else echo "no-pr-marker"; fi
+      - name: Confirm executor remains untrusted
+        run: |
+          echo "Repository bytes were executed/read only after the protected workflow identity marker above."
